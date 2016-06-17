@@ -1,7 +1,8 @@
 # Jumper - level editor
 
-A small software to edit Jumper's game level
-You can fin Jumper game [HERE](https://github.com/ycornamusaz/jumper)
+A small software to edit Jumper's game level.
+
+You can fin Jumper game [HERE](https://github.com/ycornamusaz/jumper).
 
 ## Install
 
