@@ -1,0 +1,341 @@
+import pygame 
+import yaml
+import ast
+from buton import *
+from config import *
+from color import *
+from enemies import *
+from ground import *
+from player import *
+from pointer import *
+from gui import *
+
+class Engine() :
+    def __init__(self) :
+
+        self.conf = Config()
+
+        ## Get the config var file
+        self.conf_data = self.conf.get_config_data()
+
+        ## Open the map configuration file
+        with open(self.conf_data["Config"]["Map"]["file"]) as map_data :
+            self.map_data = yaml.load(map_data)
+
+        ## Set the shift of the map
+        self.shift = 0
+        ## Set the shift of the gui
+        self.shift_gui = 0
+
+        ## Var to check if the player is used
+        self.player_used = False
+
+########## CREATE GUI ##########
+
+    def gen_gui(self, gui_list, groups) :
+        try :
+            if x > 0 :
+                pass
+        except :
+            dalle = 0
+            x = 0
+        
+        ## We want 2 rows
+        for i in range(2) :
+            x = 0
+            y = 30*(i+1)
+
+            ## And 15 column
+            for j in range(15) :
+                x += 35.625
+                if dalle < 29 :
+                    ## Create the dalle
+                    entity = Dalle(dalle)
+                else : 
+                    break
+
+                ## Set dalle position
+                entity.rect.x = x
+
+                if i == 0 :
+                    entity.rect.y = y
+                elif i > 0 :
+                    entity.rect.y = y + entity.height
+
+                x += entity.width
+
+                dalle += 1
+
+                ## Add dalle to groups
+                for group in groups :
+                    group.add(entity)
+
+                gui_list.add(entity)
+
+
+########## BUTON UPDATE ##########
+
+    def update_selected_buton(self, buton_list, pointer, groups) :
+
+        ## Detect rect colision between pointer and buton group
+        buton_pointer_list = pygame.sprite.spritecollide(pointer, buton_list, True)
+
+        ## If a rect colision is detected
+        if buton_pointer_list != [] : 
+            ## For each buton who are in colision with pointer
+            for buton in buton_pointer_list :
+                if pygame.sprite.collide_mask(pointer, buton) != None :
+                    ## Update text Color to red
+                    if buton.color != Color.RED :
+                        buton.update(buton.text , Color.RED)
+                else :
+                    ## Update text Color to white
+                    if buton.color != Color.WHITE :
+                        buton.update(buton.text, Color.WHITE)
+
+                ## Re-add buton to sprite list
+                for group in groups :
+                    group.add(buton)
+        else :
+            for buton in buton_list :
+                ## Update text Color to white
+                if buton.color != Color.WHITE :
+                    buton.update(buton.text, Color.WHITE)
+
+########## GET BUTON ##########
+
+    def get_pressed_buton(self, buton_list, pointer, groups) :
+
+        ## Detect rect colision between pointer and buton group
+        buton_pointer_list = pygame.sprite.spritecollide(pointer, buton_list, True)
+        buton_selected = None
+        ## For each butons
+        for buton in buton_pointer_list :
+            ## Check if the pointer mask and the buton mask are collide
+            if pygame.sprite.collide_mask(pointer, buton) != None :
+                ## Re-add the buton in the groups
+                for group in groups :
+                    group.add(buton)
+                ## Return the buton
+                buton_selected = buton
+            else :
+                ## Re-add the buton in the groups
+                for group in groups :
+                    group.add(buton)
+
+        return buton_selected
+
+########## CREATE ENTITY FORM BUTON ##########
+
+    def create_entity(self, buton, groups, axis) :
+
+        ## Create entity depends on buton type
+        if buton.entity_type == "block" :
+            self.entity = Ground(buton.block_type)
+        elif buton.entity_type == "player" and self.player_used == False :
+            self.entity = Player() 
+        elif buton.entity_type == "spikeman" :
+            self.entity = SpikeMan()
+        elif buton.entity_type == "flyman" : 
+            self.entity = FlyMan()
+        elif buton.entity_type == "cloud" : 
+            self.entity = Cloud()
+        elif buton.entity_type == "wingman" : 
+            self.entity = WingMan()
+
+        ## Set position
+        self.entity.rect.x = axis[0]
+        self.entity.rect.y = axis[1]
+
+        ## Add entity to group
+        for group in groups :
+            group.add(self.entity)
+
+        return self.entity
+
+########## CREATE map.yaml FILE ##########
+
+    def gen_map_file(self, entity_list) :
+
+        ## Vars to check the presence of different parts
+        have_blocks = False
+        have_enemies = False
+        have_player = False
+        
+        ## Init text vars
+        map_data_txt = ''
+        enemie_txt = ''
+        block_txt = ''
+        player_txt = ''
+
+        ## Init lists
+        enemie_list = ['spikeman', 'flyman', 'cloud', 'wingman']
+        block_list = ['grass', 'small_grass', 'broken_grass', 'small_broken_grass', 'stone', 'small_stone', 'broken_stone', 'small_broken_stone', 'cake', 'small_cake', 'broken_cake', 'small_broken_cake', 'snow', 'small_snow', 'broken_snow', 'small_broken_snow', 'sand', 'small_sand', 'broken_sand', 'small_broken_sand', 'wood', 'small_wood', 'broken_wood', 'small_broken_wood']
+
+        ## Init vars
+        for grd_type in block_list :
+            exec("%s = ''" % grd_type)
+            exec("%s%s = 0" % (grd_type, "_num"))
+
+        for enm_type in enemie_list :
+            exec("%s = ''" % enm_type)
+            exec("%s%s = 0" % (enm_type, "_num"))
+
+        exec("%s = ''" % 'player')
+
+        ## Scan all entities
+        for entity in entity_list :
+
+            ## If the entity is a enemie
+            if entity.entity_type == "enemie" :
+                ## Mark enemies as present
+                have_enemies = True
+
+                ## If there's already an enemie of the same type
+                if eval("%s_num" % entity.enemie_type) > 0 :
+                    ## Add coma
+                    exec("%s += ', '" % entity.enemie_type)
+
+                ## Else
+                else :
+                    ## Add start text
+                    exec("%s += '\\\'%s\\\': ['" % (entity.enemie_type, entity.enemie_type))
+
+                ## Wingman is particular, so make a condition
+                if entity.enemie_type == 'wingman' :
+                    ## Create the position text
+                    exec("%s += '{\\\'x\\\': %d, \\\'y\\\': %d, \\\'to\\\': %d}'" % (entity.enemie_type, entity.rect.x, 1000 - entity.rect.y, 1000 - entity.ghost.rect.y))
+                else :
+                    ## Create the position text
+                    exec("%s += '{\\\'x\\\': %d, \\\'y\\\': %d, \\\'to\\\': %d}'" % (entity.enemie_type, entity.rect.x, 1000 - entity.rect.y, entity.ghost.rect.x))
+
+                ## Increment enemie type number
+                exec("%s%s += 1" % (entity.enemie_type, "_num"))
+
+            ## If the entity is a block
+            if entity.entity_type == "block" :
+                ## Mark the block as present
+                have_blocks = True
+
+                ## If there's already a block of the same type
+                if eval("%s_num" % entity.ground_type) > 0 :
+                    ## Add coma
+                    exec("%s += ', '" % entity.ground_type)
+
+                ## Else
+                else :
+                    ## Add start text
+                    exec("%s += '\\\'%s\\\': ['" % (entity.ground_type, entity.ground_type))
+
+                ## Create the position text
+                exec("%s += '{\\\'x\\\': %d, \\\'y\\\': %d}'" % (entity.ground_type, entity.rect.x, 1000 - entity.rect.y))
+                ## Increment enemie type number
+                exec("%s%s += 1" % (entity.ground_type, "_num"))
+
+            ## If the entity is player
+            if entity.entity_type == "player" :
+                ## Mark player as present
+                have_player = True
+                
+                ## Create the position text
+                exec("%s += '{\\\'x\\\': %d, \\\'y\\\': %d}'" % ('player', entity.rect.x, 1000 - entity.rect.y))
+
+##### PLAYER STRING GENERATOR #####
+
+        ## If the player is present
+        if have_player :
+            ## Add player's text start
+            player_txt += "'Player': "
+            ## Add player's position
+            player_txt += eval("%s" % 'player')
+
+##### ENEMIE STRING GENERATOR #####
+
+        ## If enemies are present
+        if have_enemies :
+            ## Add enemie's text start
+            enemie_txt += "'Enemies': {"
+
+            ## For each enemie
+            for enemie in enemie_list :
+
+                ## If there's more than 0 enemie
+                if eval("%s_num" % enemie) > 0 :
+                    ## If this is not the first enemie
+                    if enemie_txt != "'Enemies': {" :
+                        ## Add coma
+                        enemie_txt += ', '
+
+                    ## Add enemies text
+                    enemie_txt += eval("%s" % enemie)
+                    ## Close list
+                    enemie_txt += ']'
+
+            ## Close dictionary
+            enemie_txt += '}'
+
+##### BLOCK STRING GENERATOR #####
+
+        ## If blocks are present
+        if have_blocks :
+            ## Add block's start text
+            block_txt += "'Blocks': {"
+
+            ## For each block
+            for block in block_list :
+
+                ## If there's more than 0 block
+                if eval("%s_num" % block) > 0 :
+                    ## If this is not the first block
+                    if block_txt != "'Blocks': {" :
+                        ## Add coma
+                        block_txt += ', '
+
+                    ## Add blocks text
+                    block_txt += eval("%s" % block)
+                    ## Close text
+                    block_txt += ']'
+
+            ## Close dictionary
+            block_txt += '}'
+
+##### MAP STRING GENERATOR #####
+
+        ## Set text start
+        map_data_txt = "{'Levels': [{"
+        
+        ## If player is present
+        if have_player :
+            ## Add player string to map string
+            map_data_txt += player_txt
+            ## If blocks or enemies are present
+            if have_blocks or have_enemies :
+                ## Add coma
+                map_data_txt += ', '
+        
+        ## If blocks are present
+        if have_blocks :
+            ## Add player string to map string
+            map_data_txt += block_txt
+            ## If blocks or enemies are present
+            if have_enemies :
+                ## Add coma
+                map_data_txt += ', '
+        
+        ## If enemies are present
+        if have_enemies :
+            ## Add player string to map string
+            map_data_txt += enemie_txt
+        
+        ## Close dictionary, list, dictionary
+        map_data_txt += "}]}"
+
+        ## Convert map text to dictionary
+        map_data = ast.literal_eval(map_data_txt)
+        
+        ## Open map.yaml file in write mode
+        with open('map.yaml', 'w') as outfile:
+            ## Write map_data dictionary as yaml
+            outfile.write(yaml.dump(map_data, default_flow_style=False))
+
+        print('Saved !')
