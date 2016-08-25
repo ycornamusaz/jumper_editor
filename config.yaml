@@ -1,6 +1,6 @@
 Config:
   Map:
-    file: map.yaml
+    file: ../map.yaml
   Players:
     Keys:
     - action: K_SPACE

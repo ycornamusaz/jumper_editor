@@ -509,7 +509,7 @@ class Engine() :
         map_data = ast.literal_eval(map_data_txt)
 
         ## Open map.yaml file in write mode
-        with open('map.yaml', 'w') as outfile:
+        with open(self.conf_data["Config"]["Map"]["file"], 'w') as outfile:
             ## Write map_data dictionary as yaml
             outfile.write(yaml.dump(map_data, default_flow_style=False))
 
