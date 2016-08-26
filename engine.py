@@ -23,7 +23,7 @@ class Engine() :
             self.map_data = yaml.load(map_data)
 
         ## Set the shift of the map
-        self.shift = 0
+        self.shift_x = 0
         ## Set the shift of the gui
         self.shift_gui = 0
 
@@ -72,6 +72,35 @@ class Engine() :
 
                 gui_list.add(entity)
 
+########## MAP SHIFT ##########
+
+    def move_map(self, direction, liste) :
+
+        ## If the player is at 1/3 of je screen on the right side
+        if direction == 'right' :
+
+            ## Shift all the entities to the left
+            for entity in liste :
+                entity.rect.x -= 5
+                try :
+                    if entity.enemie_type != "wingman" :
+                        entity.ghost.rect.x -= 5
+                except :
+                    pass
+            self.shift_x -= 5
+
+        ## If the player is at 1/16 of je screen on the left side
+        if direction == 'left' :
+
+            ## Shift all the entities to the right
+            for entity in liste :
+                entity.rect.x += 5
+                try :
+                    if entity.enemie_type != "wingman" :
+                        entity.ghost.rect.x += 5
+                except :
+                    pass
+            self.shift_x += 5
 
 ########## BUTON UPDATE ##########
 

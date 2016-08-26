@@ -159,6 +159,7 @@ class Game :
         done_game = False
 
         entity = None
+        direction = None
 
         ## Create game sprite groups
         gui_list = pygame.sprite.Group()
@@ -203,6 +204,24 @@ class Game :
                     ## If 's' is pressed, save file
                     if event.key == pygame.K_s :
                         engine.gen_map_file(entity_list)
+
+                    ## If the left arrow is pressed
+                    if event.key == pygame.K_LEFT :
+                        direction = 'left'
+
+                    ## If the right arrow is pressed
+                    if event.key == pygame.K_RIGHT :
+                        direction = 'right'
+
+                ## If a key is release
+                if event.type == pygame.KEYUP :
+                    ## If the left arrow is release
+                    if event.key == pygame.K_LEFT :
+                        direction = None
+
+                    ## If the right arrow is release
+                    if event.key == pygame.K_RIGHT :
+                        direction = None
 
                 ## If any mouse buton are release
                 if event.type == pygame.MOUSEBUTTONUP :
@@ -281,6 +300,9 @@ class Game :
             pos = pygame.mouse.get_pos()
             pointer.rect.x = pos[0]
             pointer.rect.y = pos[1]
+
+            if direction != None :
+                engine.move_map(direction, entity_list)
 
             ## If there's a clicked entity
             if entity != None :
