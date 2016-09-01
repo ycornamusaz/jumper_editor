@@ -84,23 +84,24 @@ class Game :
                     if event.button == 1 :
 
                         ## Detect and retourn the pressed buton
-                        buton = engine.get_pressed_buton(buton_list, pointer, [all_menu_sprites_list, buton_list])
+                        butons = engine.get_pressed_buton(buton_list, pointer, [all_menu_sprites_list, buton_list])
 
-                        ## If there's no buton pressed, do nothing
-                        if buton == None :
-                            pass
+                        for buton in butons :
+                            ## If there's no buton pressed, do nothing
+                            if buton == None :
+                                pass
 
-                        ## If play buton is pressed, launch the game
-                        elif buton.text is "Play" :
-                            start_game = True
+                            ## If play buton is pressed, launch the game
+                            elif buton.text is "Play" :
+                                start_game = True
 
-                        ## If options buton is pressed, launch options menu
-                        elif buton.text is "Options" :
-                            start_options = True
+                            ## If options buton is pressed, launch options menu
+                            elif buton.text is "Options" :
+                                start_options = True
 
-                        ## If quit buton is pressed, quit the game
-                        elif buton.text is "Quit" :
-                            done_menu = True
+                            ## If quit buton is pressed, quit the game
+                            elif buton.text is "Quit" :
+                                done_menu = True
 
             ########## LOGIC CODE ZONE ##########
 
@@ -154,15 +155,18 @@ class Game :
         pygame.mouse.set_visible(True)
         ## Set background
         background = Background()
+        gui = Cadre()
 
         ## Set game loop stat
         done_game = False
 
         entity = None
+        entities = []
         direction = None
 
         ## Create game sprite groups
-        gui_list = pygame.sprite.Group()
+        mid_layer = pygame.sprite.Group()
+        back_layer = pygame.sprite.Group()
         buton_list = pygame.sprite.Group()
         mouvable_list = pygame.sprite.Group()
         all_sprites_list = pygame.sprite.Group()
@@ -180,7 +184,7 @@ class Game :
         all_sprites_list.add(pointer)
 
         ## Generate map
-        engine.gen_gui(gui_list, [buton_list, all_sprites_list])
+        engine.gen_gui(back_layer, [buton_list, all_sprites_list])
 
         ## Start game loop
         while not done_game :
@@ -238,61 +242,78 @@ class Game :
                     if event.button == 1 :
 
                         ## Return clicked entity
-                        entity = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
+                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
 
-                        ## If there's a clicked entity, you can move it
-                        if entity != None :
-                            shift_x = pointer.rect.x - entity.rect.x
-                            shift_y = pointer.rect.y - entity.rect.y
-                            try : 
-                                ## If entity has a ghost, the ghos will move with it
-                                if entity.has_ghost == True :
-                                    shift_ghost_x = entity.ghost.rect.x - entity.rect.x
-                                    shift_ghost_y = entity.ghost.rect.y - entity.rect.y
+                        if entities != [] :
+                            ## If there's a clicked entity, you can move it
+                            for entity in entities :
+                                
+                                shift_x = pointer.rect.x - entity.rect.x
+                                shift_y = pointer.rect.y - entity.rect.y
+                                try : 
+                                    ## If entity has a ghost, the ghos will move with it
+                                    if entity.has_ghost == True :
+                                        shift_ghost_x = entity.ghost.rect.x - entity.rect.x
+                                        shift_ghost_y = entity.ghost.rect.y - entity.rect.y
 
-                            except :
-                                pass
+                                except :
+                                    pass
 
                         else :
                             ## Detect and retourn the pressed buton
-                            buton = engine.get_pressed_buton(buton_list, pointer, [all_sprites_list, buton_list])
+                            butons = engine.get_pressed_buton(buton_list, pointer, [all_sprites_list, buton_list, back_layer])
 
-                            ## If there's no buton pressed, do nothing
-                            if buton == None :
-                                pass
+                            if butons != [] :
+                                for buton in butons :
+                                    
+                                    ## If there's no clicked entity entity 
+                                    if buton.entity_type != None and buton.entity_type != 'arrow' and buton.entity_type != 'gui' and entity == None and pointer.rect.x > 148 * conf.factor and pointer.rect.x < 1651 * conf.factor :
+                                        ## Create entity depends on buton
+                                        entity = engine.create_entity(buton, [entity_list, all_sprites_list, mouvable_list], [pointer.rect.x, pointer.rect.y])
+                                        shift_x = pointer.rect.x - entity.rect.x
+                                        shift_y = pointer.rect.y - entity.rect.y
 
-                            ## If there's no clicked entity entity 
-                            elif buton.entity_type != None and entity == None :
-                                ## Create entity depends on buton
-                                entity = engine.create_entity(buton, [entity_list, all_sprites_list, mouvable_list], [pointer.rect.x, pointer.rect.y])
-                                shift_x = pointer.rect.x - entity.rect.x
-                                shift_y = pointer.rect.y - entity.rect.y
+                                    elif buton.entity_type == 'arrow' :
+                                        if buton.arrow_type == 'right' :
+                                            direction_gui = 'right'
+                                        elif buton.arrow_type == 'left' :
+                                            direction_gui = 'left'
 
                     ## If right buton is pressed
                     if event.button == 3 :
 
                         ## Return clicked entity
-                        entity = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
+                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
 
-                        ## I don't remember :P 
-                        if entity == None or entity.entity_type == "block" or entity.entity_type != "player" and entity.has_ghost == True :
-                            entity = engine.get_pressed_buton(ghost_list, pointer, [all_sprites_list, ghost_list, mouvable_list])
+                        ## I don't remember :P
+                        if entities == [] or entities[0].entity_type == "block" or entities[0].entity_type != "player" and entities[0].has_ghost == True :
+                            entities = engine.get_pressed_buton(ghost_list, pointer, [all_sprites_list, ghost_list, mouvable_list])
 
-                        ## If there's an entity, move it
-                        if entity != None :
-                            shift_x = pointer.rect.x - entity.rect.x
-                            shift_y = pointer.rect.y - entity.rect.y
+                            for entity in entities :
+                                ## If there's an entity, move it
+                                shift_x = pointer.rect.x - entity.rect.x
+                                shift_y = pointer.rect.y - entity.rect.y
 
                         ## If there's a enemie, place the ghost
-                        if entity != None and entity.entity_type != "block" and entity.entity_type != "player" and entity.is_ghost == False and entity.has_ghost == False :
-                            if entity.enemie_type == "wingman" :
-                                entity.to(pointer.rect.y, [all_sprites_list, ghost_list, mouvable_list])
-                            elif entity.enemie_type == "cloud" :
-                                entity.to(pointer.rect.x, [all_sprites_list, ghost_list, mouvable_list])
-                            else :
-                                entity.to(pointer.rect.x, [all_sprites_list, ghost_list, mouvable_list])
+                        if entities != [] :
+                            for entity in entities :
+                                if entity.entity_type != "block" and entity.entity_type != "player" and entity.is_ghost == False and entity.has_ghost == False :
+                                    if entity.enemie_type == "wingman" :
+                                        entity.to(pointer.rect.y, [all_sprites_list, ghost_list, mouvable_list])
+                                    else :
+                                        entity.to(pointer.rect.x, [all_sprites_list, ghost_list, mouvable_list])
 
-                            entity = entity.ghost
+                                    entity = entity.ghost
+
+                if event.type == pygame.MOUSEBUTTONUP :
+                    if event.button == 1 :
+                        direction_gui = None
+                        entity = None
+                        entities = []
+
+                    if event.button == 3 :
+                        entity = None
+                        entities = []
 
             ########## LOGIC CODE ZONE ##########
 
@@ -304,8 +325,11 @@ class Game :
             if direction != None :
                 engine.move_map(direction, entity_list)
 
-            ## If there's a clicked entity
+            if direction_gui != None :
+                engine.move_gui(direction_gui, back_layer, buton_list)
+
             if entity != None :
+                ## If there's a clicked entity
                 try :
                     ## If this is a ghost, move it with entity specificity
                     if entity.is_ghost == True : 
@@ -346,6 +370,10 @@ class Game :
                     ## If the entity is not or have not a ghost, just move it
                     entity.rect.x = pointer.rect.x - shift_x
                     entity.rect.y = pointer.rect.y - shift_y
+            
+            for buton in buton_list :
+                if buton.entity_type == 'arrow' :
+                    mid_layer.add(buton)
 
             ## Detect bitmap colision between butons and pointer
             #engine.update_selected_buton(buton_list, pointer, [all_sprites_list, buton_list])
@@ -359,7 +387,11 @@ class Game :
             ########## DRAWING CODE ZONE ##########
 
             ## Draw all sprites to the screen
-            all_sprites_list.draw(screen)
+            #all_sprites_list.draw(screen)
+            back_layer.draw(screen)
+            gui.update_fond(screen)
+            mid_layer.draw(screen)
+            gui.update_cadre(screen)
             pointer_list.draw(screen)
 
             ########## REFRESH SCREEN ZONE ##########

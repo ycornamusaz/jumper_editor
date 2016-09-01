@@ -124,16 +124,104 @@ class Dalle(pygame.sprite.Sprite) :
         self.image.blit(self.image_1, [0,0])
         self.image.blit(self.image_2, [(self.width/2 - self.image_2_width/2), (self.height/2 - self.image_2_height/2)])
 
+
         if ground_type < 24 :
             self.entity_type = "block"
         elif ground_type == 24 :
             self.entity_type = "player"
         elif ground_type == 25 :
-            self.entity_type = "spikeman"
+            self.entity_type = "enemie"
+            self.enemie_type = "spikeman"
         elif ground_type == 26 :
-            self.entity_type = "flyman"
+            self.entity_type = "enemie"
+            self.enemie_type = "flyman"
         elif ground_type == 27 :
-            self.entity_type = "cloud"
+            self.entity_type = "enemie"
+            self.enemie_type = "cloud"
         elif ground_type == 28 :
-            self.entity_type = "wingman"
+            self.entity_type = "enemie"
+            self.enemie_type = "wingman"
  
+class Arrow(pygame.sprite.Sprite) :
+
+    def __init__(self, arrow) :
+        
+        super().__init__()
+
+        self.conf = Config()
+
+        self.image_1 = pygame.image.load("PNG/gui/back_2.png")
+         
+        ## Import picture
+        if arrow == 'left' :
+            self.image_2 = pygame.image.load("PNG/gui/left.png").convert()
+            self.entity_type = 'arrow'
+            self.arrow_type = 'left'
+        elif arrow == 'right' :
+            self.image_2 = pygame.image.load("PNG/gui/right.png").convert()
+            self.entity_type = 'arrow'
+            self.arrow_type = 'right'
+        elif arrow == 'up' :
+            self.image_2 = pygame.image.load("PNG/gui/up.png").convert()
+            self.entity_type = 'arrow'
+            self.arrow_type = 'up'
+        elif arrow == 'down' :
+            self.image_2 = pygame.image.load("PNG/gui/down.png").convert()
+            self.entity_type = 'arrow'
+            self.arrow_type = 'down'
+
+
+        self.image_1 = pygame.transform.scale(self.image_1, [int(self.image_1.get_width()*self.conf.factor), int(self.image_1.get_height()*self.conf.factor)])
+        self.image_2 = pygame.transform.scale(self.image_2, [int(self.image_2.get_width()/2), int(self.image_2.get_height()/2)])
+        self.image = pygame.Surface([self.image_1.get_width(),self.image_1.get_height()])
+
+        self.image.set_colorkey(Color.BLACK)
+        self.image_1.set_colorkey(Color.WHITE)
+        self.image_2.set_colorkey(Color.BLACK)
+
+        ## Get sprite position
+        self.rect = self.image.get_rect()
+
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.rect.x = (self.conf.width/2 - self.width/2)
+        self.rect.y = 32
+
+        self.image_2_width = self.image_2.get_width()
+        self.image_2_height = self.image_2.get_height()
+
+        self.image.blit(self.image_1, [0,0])
+        self.image.blit(self.image_2, [(self.width/2 - self.image_2_width/2), (self.height/2 - self.image_2_height/2)])
+
+class Cadre() :
+
+    def __init__(self) :
+        
+        self.conf = Config()
+
+        self.image_1 = pygame.image.load("PNG/gui/cadre_1.png")
+        self.image_2 = pygame.image.load("PNG/gui/cadre_2.png")
+         
+        self.image_1 = pygame.transform.scale(self.image_1, [int(self.image_1.get_width()*self.conf.factor), int(self.image_1.get_height()*self.conf.factor)])
+        self.image_2 = pygame.transform.scale(self.image_2, [int(self.image_2.get_width()*self.conf.factor), int(self.image_2.get_height()*self.conf.factor)])
+
+        self.image_1.set_colorkey(Color.WHITE)
+        self.image_2.set_colorkey(Color.WHITE)
+
+        ## Get sprite position
+        self.rect = self.image_1.get_rect()
+
+        self.width = self.image_1.get_width()
+        self.height = self.image_1.get_height()
+        self.rect.x = (self.conf.width/2 - self.width/2)
+        self.rect.y = 32
+
+    def update_cadre(self, screen) :
+
+        ## Print background on screen
+        screen.blit(self.image_1, [20, 15])
+    
+    def update_fond(self, screen) :
+
+        ## Print background on screen
+        screen.blit(self.image_2, [20, 15])

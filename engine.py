@@ -26,51 +26,75 @@ class Engine() :
         self.shift_x = 0
         ## Set the shift of the gui
         self.shift_gui = 0
+        self.shift_pitch = 0
 
         ## Var to check if the player is used
         self.player_used = False
 
 ########## CREATE GUI ##########
 
-    def gen_gui(self, gui_list, groups) :
+    def gen_gui(self, graphic_group, groups) :
+        arrow_l = Arrow('left')
+        
+        arrow_l.rect.x = 35.625 * self.conf.factor
+        arrow_l.rect.y = 30 * self.conf.factor
+
+        for group in groups :
+            group.add(arrow_l)
+
+        arrow_r = Arrow('right')
+
+        arrow_r.rect.x = self.conf.width - 35.625 * self.conf.factor - arrow_r.width
+        arrow_r.rect.y = 30 * self.conf.factor
+
+        for group in groups :
+            group.add(arrow_r)
+
         try :
-            if x > 0 :
+            if x > 0  :
                 pass
         except :
             dalle = 0
             x = 0
-        
-        ## We want 2 rows
-        for i in range(2) :
-            x = 0
-            y = 30*(i+1)
 
-            ## And 15 column
-            for j in range(15) :
-                x += 35.625
-                if dalle < 29 :
-                    ## Create the dalle
-                    entity = Dalle(dalle)
-                else : 
-                    break
 
-                ## Set dalle position
-                entity.rect.x = x
+        for i in range(29) :
+            ## Create the dalle
+            entity = Dalle(dalle)
 
-                if i == 0 :
-                    entity.rect.y = y
-                elif i > 0 :
-                    entity.rect.y = y + entity.height
+            x = entity.width * i + 30 * i + 149
+            y = 30
 
-                x += entity.width
+            entity.rect.x = x
+            entity.rect.y = y
 
-                dalle += 1
+            if (entity.rect.x + entity.width) > (148 * self.conf.factor) and entity.rect.x < (1651 * self.conf.factor) :
+                graphic_group.add(entity)
 
-                ## Add dalle to groups
-                for group in groups :
-                    group.add(entity)
+            for group in groups :
+                group.add(entity)
 
-                gui_list.add(entity)
+            dalle += 1
+
+########## GUI SHIFT ##########
+
+    def move_gui(self, direction, graphic_group, liste) :
+
+        if direction == 'right' :
+            self.shift_pitch = 10
+        elif direction == 'left' :
+            self.shift_pitch = -10
+
+        for entity in liste :
+            if entity.entity_type != 'arrow' :
+                if (entity.rect.x + entity.width) <= (148 * self.conf.factor) or entity.rect.x >= (1651 * self.conf.factor) :
+                    graphic_group.remove(entity)
+                else :
+                    graphic_group.add(entity)
+
+                entity.rect.x += self.shift_pitch
+
+        self.shift_gui += self.shift_pitch
 
 ########## MAP SHIFT ##########
 
@@ -137,7 +161,7 @@ class Engine() :
 
         ## Detect rect colision between pointer and buton group
         buton_pointer_list = pygame.sprite.spritecollide(pointer, buton_list, True)
-        buton_selected = None
+        buton_selected = []
         ## For each butons
         for buton in buton_pointer_list :
             ## Check if the pointer mask and the buton mask are collide
@@ -146,7 +170,7 @@ class Engine() :
                 for group in groups :
                     group.add(buton)
                 ## Return the buton
-                buton_selected = buton
+                buton_selected.append(buton)
             else :
                 ## Re-add the buton in the groups
                 for group in groups :
@@ -162,15 +186,16 @@ class Engine() :
         if buton.entity_type == "block" :
             self.entity = Ground(buton.block_type)
         elif buton.entity_type == "player" and self.player_used == False :
-            self.entity = Player() 
-        elif buton.entity_type == "spikeman" :
-            self.entity = SpikeMan()
-        elif buton.entity_type == "flyman" : 
-            self.entity = FlyMan()
-        elif buton.entity_type == "cloud" : 
-            self.entity = Cloud()
-        elif buton.entity_type == "wingman" : 
-            self.entity = WingMan()
+            self.entity = Player()
+        elif buton.entity_type == 'enemie' :
+            if buton.enemie_type == "spikeman" :
+                self.entity = SpikeMan()
+            elif buton.enemie_type == "flyman" : 
+                self.entity = FlyMan()
+            elif buton.enemie_type == "cloud" : 
+                self.entity = Cloud()
+            elif buton.enemie_type == "wingman" : 
+                self.entity = WingMan()
 
         ## Set position
         self.entity.rect.x = axis[0]
@@ -361,7 +386,7 @@ class Engine() :
 
         ## Convert map text to dictionary
         map_data = ast.literal_eval(map_data_txt)
-        
+
         ## Open map.yaml file in write mode
         with open('map.yaml', 'w') as outfile:
             ## Write map_data dictionary as yaml
