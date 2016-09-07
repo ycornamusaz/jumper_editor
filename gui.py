@@ -225,3 +225,26 @@ class Cadre() :
 
         ## Print background on screen
         screen.blit(self.image_2, [20, 15])
+
+class Trash(pygame.sprite.Sprite) :
+    def __init__(self) :
+
+        super().__init__()
+        
+        self.conf = Config()
+
+        self.image = pygame.image.load("PNG/gui/trash.png")
+         
+        self.image = pygame.transform.scale(self.image, [int(self.image.get_width()*self.conf.factor), int(self.image.get_height()*self.conf.factor)])
+
+        self.image.set_colorkey(Color.WHITE)
+
+        ## Get sprite position
+        self.rect = self.image.get_rect()
+
+        self.entity_type = 'trash'
+
+        self.width = self.image.get_width()
+        self.height = self.image.get_height()
+        self.rect.x = (self.conf.width/2 - self.width/2)
+        self.rect.y = 32

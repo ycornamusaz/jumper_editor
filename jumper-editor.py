@@ -231,10 +231,22 @@ class Game :
                 if event.type == pygame.MOUSEBUTTONUP :
 
                     if event.button == 1 or event.button == 3 :
+                        butons = engine.get_pressed_buton(buton_list, pointer, [all_sprites_list, back_layer, buton_list, back_layer])
+
+                        for buton in butons :
+                            if buton.entity_type == 'trash' :
+                                entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, back_layer, entity_list, mouvable_list])
+                                for entity in entities :
+                                    if entity.entity_type == 'enemie' :
+                                        entity.ghost.kill()
+                                    entity.kill()
+
                         ## If a entity is selected
                         if entity != None :
                             ## Release it
                             entity = None
+                        direction_gui = None
+                        entities = []
 
                 ## If any mouse buton is pressed 
                 if event.type == pygame.MOUSEBUTTONDOWN :
@@ -267,7 +279,7 @@ class Game :
                                 for buton in butons :
                                     
                                     ## If there's no clicked entity entity 
-                                    if buton.entity_type != None and buton.entity_type != 'arrow' and buton.entity_type != 'gui' and entity == None and pointer.rect.x > 148 * conf.factor and pointer.rect.x < 1651 * conf.factor :
+                                    if buton.entity_type != None and buton.entity_type != 'arrow' and buton.entity_type != 'trash' and buton.entity_type != 'gui' and entity == None and pointer.rect.x > 148 * conf.factor and pointer.rect.x < 1651 * conf.factor :
                                         ## Create entity depends on buton
                                         entity = engine.create_entity(buton, [entity_list, all_sprites_list, back_layer, mouvable_list], [pointer.rect.x, pointer.rect.y])
                                         shift_x = pointer.rect.x - entity.rect.x
@@ -278,6 +290,9 @@ class Game :
                                             direction_gui = 'right'
                                         elif buton.arrow_type == 'left' :
                                             direction_gui = 'left'
+
+                                    elif buton.entity_type == 'trash' :
+                                        engine.clear_entity(entity_list)
 
                     ## If right buton is pressed
                     if event.button == 3 :
@@ -307,6 +322,7 @@ class Game :
 
                 if event.type == pygame.MOUSEBUTTONUP :
                     if event.button == 1 :
+
                         direction_gui = None
                         entity = None
                         entities = []

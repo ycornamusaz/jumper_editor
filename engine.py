@@ -50,6 +50,15 @@ class Engine() :
         for group in groups :
             group.add(arrow_r)
 
+        trash = Trash()
+
+        trash.rect.x = self.conf.width - 35.625 * self.conf.factor - trash.width
+        trash.rect.y = self.conf.height - 30 * self.conf.factor - trash.height
+
+        graphic_group.add(trash)
+        for group in groups :
+            group.add(trash)
+
         try :
             if x > 0  :
                 pass
@@ -83,19 +92,19 @@ class Engine() :
 
         if direction == 'right' :
             for entity in liste :
-                if entity.entity_type != 'arrow' and entity.entity_number == 28 and (entity.rect.x + entity.width) >= (1651 * self.conf.factor) :
+                if entity.entity_type != 'arrow' and entity.entity_type != 'trash' and entity.entity_number == 28 and (entity.rect.x + entity.width) >= (1651 * self.conf.factor) :
                     self.shift_pitch = -10
-                elif entity.entity_type != 'arrow' and entity.entity_number == 28 :
+                elif entity.entity_type != 'arrow' and entity.entity_type != 'trash' and entity.entity_number == 28 :
                     self.shift_pitch = 0
         elif direction == 'left' :
             for entity in liste :
-                if entity.entity_type != 'arrow' and entity.entity_number == 0 and entity.rect.x <= (148 * self.conf.factor) :
+                if entity.entity_type != 'arrow' and entity.entity_type != 'trash' and entity.entity_number == 0 and entity.rect.x <= (148 * self.conf.factor) :
                     self.shift_pitch = 10
-                elif entity.entity_type != 'arrow' and entity.entity_number == 0 :
+                elif entity.entity_type != 'arrow' and entity.entity_type != 'trash' and entity.entity_number == 0 :
                     self.shift_pitch = 0
 
         for entity in liste :
-            if entity.entity_type != 'arrow' :
+            if entity.entity_type != 'arrow' and entity.entity_type != 'trash' :
                 if (entity.rect.x + entity.width) <= (148 * self.conf.factor) or entity.rect.x >= (1651 * self.conf.factor) :
                     graphic_group.remove(entity)
                 else :
@@ -186,6 +195,15 @@ class Engine() :
                     group.add(buton)
 
         return buton_selected
+
+########## CLEAR ENTITIES ##########
+
+    def clear_entity(self, entity_list) :
+
+        for entity in entity_list :
+            if entity.entity_type == 'enemie' :
+                entity.ghost.kill()
+            entity.kill()
 
 ########## CREATE ENTITY FORM BUTON ##########
 
