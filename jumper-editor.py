@@ -185,6 +185,7 @@ class Game :
 
         ## Generate map
         engine.gen_gui(back_layer, [buton_list, all_sprites_list])
+        engine.gen_map([all_sprites_list, back_layer, entity_list, mouvable_list])
 
         ## Start game loop
         while not done_game :
@@ -237,7 +238,7 @@ class Game :
                             if buton.entity_type == 'trash' :
                                 entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, back_layer, entity_list, mouvable_list])
                                 for entity in entities :
-                                    if entity.entity_type == 'enemie' :
+                                    if entity.entity_type == 'enemie' and entity.has_ghost :
                                         entity.ghost.kill()
                                     entity.kill()
 
@@ -388,7 +389,7 @@ class Game :
                     entity.rect.y = pointer.rect.y - shift_y
             
             for buton in buton_list :
-                if buton.entity_type == 'arrow' :
+                if buton.entity_type == 'arrow' or buton.entity_type == 'trash' :
                     mid_layer.add(buton)
 
             ## Detect bitmap colision between butons and pointer

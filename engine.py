@@ -19,8 +19,11 @@ class Engine() :
         self.conf_data = self.conf.get_config_data()
 
         ## Open the map configuration file
-        with open(self.conf_data["Config"]["Map"]["file"]) as map_data :
-            self.map_data = yaml.load(map_data)
+        try :
+            with open(self.conf_data["Config"]["Map"]["file"]) as map_data :
+                self.map_data = yaml.load(map_data)
+        except :
+            pass
 
         ## Set the shift of the map
         self.shift_x = 0
@@ -201,7 +204,7 @@ class Engine() :
     def clear_entity(self, entity_list) :
 
         for entity in entity_list :
-            if entity.entity_type == 'enemie' :
+            if entity.entity_type == 'enemie' and entity.has_ghost :
                 entity.ghost.kill()
             entity.kill()
 
@@ -233,6 +236,97 @@ class Engine() :
             group.add(self.entity)
 
         return self.entity
+
+########## CREATE, CONFIGURE BLOCKS AND DEFAULT PLAYER POSITION  ##########
+
+    def gen_map(self, groups) :
+
+    ##### BLOCKS #####
+        try :
+            ## For each block types
+            for ground_type in self.map_data["Levels"][0]["Blocks"] :
+                i = 0
+
+                ## For each blocks
+                for x, y in self.map_data["Levels"][0]["Blocks"][ground_type] :
+
+                    ## Read x and y axes
+                    x = self.map_data["Levels"][0]["Blocks"][ground_type][i]["x"]*self.conf.factor
+                    y = (1000 - self.map_data["Levels"][0]["Blocks"][ground_type][i]["y"])*self.conf.factor
+
+                    ## Create block
+                    ground0 = Ground(ground_type)
+
+                    ## Set x and y position
+                    ground0.rect.x = x
+                    ground0.rect.y = y
+
+                    ## For each groups 
+                    for group in groups :
+                        ## Add the block to the group
+                        group.add(ground0)
+
+                    i += 1
+        except :
+            pass
+
+    ##### PLAYER #####
+
+        try :
+            x = self.map_data["Levels"][0]["Player"]["x"]*self.conf.factor
+            y = (1000 - self.map_data["Levels"][0]["Player"]["y"])*self.conf.factor
+
+            player = Player()
+
+            player.rect.x = x
+            player.rect.y = y
+
+            for group in groups :
+                group.add(player)
+
+        except :
+            pass
+
+    ##### ENEMIES #####
+        try :
+            for enemie_type in self.map_data["Levels"][0]["Enemies"] :
+                i = 0
+
+                for x, y, to in self.map_data["Levels"][0]["Enemies"][enemie_type] :
+                    x = self.map_data["Levels"][0]["Enemies"][enemie_type][i]["x"]*self.conf.factor
+                    y = (1000 - self.map_data["Levels"][0]["Enemies"][enemie_type][i]["y"])*self.conf.factor
+                    to = self.map_data["Levels"][0]["Enemies"][enemie_type][i]["to"]*self.conf.factor
+
+                    if enemie_type == "flyman" :
+                        enemie0 = FlyMan()
+
+                    elif enemie_type == "spikeman" :
+                        enemie0 = SpikeMan()
+
+                    elif enemie_type == "cloud" :
+                        enemie0 = Cloud()
+
+                    elif enemie_type == "wingman" :
+                        enemie0 = WingMan()
+
+                    enemie0.rect.x = x
+                    enemie0.rect.y = y
+                    enemie0.start_from = x
+                    enemie0.end_to = to
+                    enemie0.start_from_base = x
+                    enemie0.end_to_base = to
+                    if enemie_type == "wingman" :
+                        enemie0.start_from = y
+                        enemie0.start_from_base = y
+                        enemie0.end_to = 1000 - to
+                        enemie0.end_to_base = 1000 - to
+
+                    for group in groups :
+                        group.add(enemie0)
+
+                    i += 1
+        except :
+            pass
 
 ########## CREATE map.yaml FILE ##########
 
