@@ -67,6 +67,7 @@ class Engine() :
 
             entity.rect.x = x
             entity.rect.y = y
+            entity.entity_number = i
 
             if (entity.rect.x + entity.width) > (148 * self.conf.factor) and entity.rect.x < (1651 * self.conf.factor) :
                 graphic_group.add(entity)
@@ -81,9 +82,17 @@ class Engine() :
     def move_gui(self, direction, graphic_group, liste) :
 
         if direction == 'right' :
-            self.shift_pitch = -10
+            for entity in liste :
+                if entity.entity_type != 'arrow' and entity.entity_number == 28 and (entity.rect.x + entity.width) >= (1651 * self.conf.factor) :
+                    self.shift_pitch = -10
+                elif entity.entity_type != 'arrow' and entity.entity_number == 28 :
+                    self.shift_pitch = 0
         elif direction == 'left' :
-            self.shift_pitch = 10
+            for entity in liste :
+                if entity.entity_type != 'arrow' and entity.entity_number == 0 and entity.rect.x <= (148 * self.conf.factor) :
+                    self.shift_pitch = 10
+                elif entity.entity_type != 'arrow' and entity.entity_number == 0 :
+                    self.shift_pitch = 0
 
         for entity in liste :
             if entity.entity_type != 'arrow' :
