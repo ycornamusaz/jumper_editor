@@ -242,7 +242,7 @@ class Game :
                     if event.button == 1 :
 
                         ## Return clicked entity
-                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
+                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, back_layer, entity_list, mouvable_list])
 
                         if entities != [] :
                             ## If there's a clicked entity, you can move it
@@ -261,7 +261,7 @@ class Game :
 
                         else :
                             ## Detect and retourn the pressed buton
-                            butons = engine.get_pressed_buton(buton_list, pointer, [all_sprites_list, buton_list, back_layer])
+                            butons = engine.get_pressed_buton(buton_list, pointer, [all_sprites_list, back_layer, buton_list, back_layer])
 
                             if butons != [] :
                                 for buton in butons :
@@ -269,7 +269,7 @@ class Game :
                                     ## If there's no clicked entity entity 
                                     if buton.entity_type != None and buton.entity_type != 'arrow' and buton.entity_type != 'gui' and entity == None and pointer.rect.x > 148 * conf.factor and pointer.rect.x < 1651 * conf.factor :
                                         ## Create entity depends on buton
-                                        entity = engine.create_entity(buton, [entity_list, all_sprites_list, mouvable_list], [pointer.rect.x, pointer.rect.y])
+                                        entity = engine.create_entity(buton, [entity_list, all_sprites_list, back_layer, mouvable_list], [pointer.rect.x, pointer.rect.y])
                                         shift_x = pointer.rect.x - entity.rect.x
                                         shift_y = pointer.rect.y - entity.rect.y
 
@@ -283,11 +283,11 @@ class Game :
                     if event.button == 3 :
 
                         ## Return clicked entity
-                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, entity_list, mouvable_list])
+                        entities = engine.get_pressed_buton(entity_list, pointer, [all_sprites_list, back_layer, entity_list, mouvable_list])
 
                         ## I don't remember :P
                         if entities == [] or entities[0].entity_type == "block" or entities[0].entity_type != "player" and entities[0].has_ghost == True :
-                            entities = engine.get_pressed_buton(ghost_list, pointer, [all_sprites_list, ghost_list, mouvable_list])
+                            entities = engine.get_pressed_buton(ghost_list, pointer, [all_sprites_list, back_layer, ghost_list, mouvable_list])
 
                             for entity in entities :
                                 ## If there's an entity, move it
@@ -299,9 +299,9 @@ class Game :
                             for entity in entities :
                                 if entity.entity_type != "block" and entity.entity_type != "player" and entity.is_ghost == False and entity.has_ghost == False :
                                     if entity.enemie_type == "wingman" :
-                                        entity.to(pointer.rect.y, [all_sprites_list, ghost_list, mouvable_list])
+                                        entity.to(pointer.rect.y, [all_sprites_list, back_layer, ghost_list, mouvable_list])
                                     else :
-                                        entity.to(pointer.rect.x, [all_sprites_list, ghost_list, mouvable_list])
+                                        entity.to(pointer.rect.x, [all_sprites_list, back_layer, ghost_list, mouvable_list])
 
                                     entity = entity.ghost
 

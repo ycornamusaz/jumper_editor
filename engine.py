@@ -81,9 +81,9 @@ class Engine() :
     def move_gui(self, direction, graphic_group, liste) :
 
         if direction == 'right' :
-            self.shift_pitch = 10
-        elif direction == 'left' :
             self.shift_pitch = -10
+        elif direction == 'left' :
+            self.shift_pitch = 10
 
         for entity in liste :
             if entity.entity_type != 'arrow' :
