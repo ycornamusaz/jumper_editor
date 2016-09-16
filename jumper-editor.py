@@ -31,6 +31,7 @@ class Game :
         done_menu = False
         start_game = False
         start_options = False
+        levels = []
         ## Set background
         background = Background()
         ## Create menu sprite group
@@ -94,6 +95,7 @@ class Game :
                             ## If play buton is pressed, launch the game
                             elif buton.text is "Play" :
                                 start_game = True
+                                level = 0
 
                             ## If options buton is pressed, launch options menu
                             elif buton.text is "Options" :
@@ -101,6 +103,7 @@ class Game :
 
                             ## If quit buton is pressed, quit the game
                             elif buton.text is "Quit" :
+                                print(engine.get_level(levels))
                                 done_menu = True
 
             ########## LOGIC CODE ZONE ##########
@@ -108,10 +111,10 @@ class Game :
             ## Check for restarting the game
             while start_game == True :
                 ## Launch game
-                Game.game()
+                levels = Game.game(level, levels)
                 start_game = False
+                start_game, done_menu, level = Game.pause(level)
                 ## One the player has gameover, launch gameover's screen
-                done_menu = True
 
             ## Update mouse pos
             pos = pygame.mouse.get_pos()
@@ -140,7 +143,9 @@ class Game :
             ## Set game ticks (per second)
             clock.tick(60)
 
-    def game() :
+        engine.gen_map_file(levels)
+
+    def game(level, levels) :
         ## Load config file
         conf = Config()
         ## Create engine
@@ -148,11 +153,11 @@ class Game :
         ## Init screen        
         screen = pygame.display.set_mode([conf.width, conf.height], conf.get_screen_mode())
         ## Init windows title
-        pygame.display.set_caption("JUMPER !!! - Level ##")
+        pygame.display.set_caption("JUMPER !!! - Level %s" % level)
         ## Init clock
         clock = pygame.time.Clock()
         ## Hide mouse cursor
-        pygame.mouse.set_visible(True)
+        pygame.mouse.set_visible(False)
         ## Set background
         background = Background()
         gui = Cadre()
@@ -176,6 +181,8 @@ class Game :
 
         ## Create pointer sprite
         pointer = Pointer()
+        shift_x = 0
+        shift_y = 0
 
         ## Add pointer to pointer's list
         pointer_list.add(pointer)
@@ -185,7 +192,7 @@ class Game :
 
         ## Generate map
         engine.gen_gui(back_layer, [buton_list, all_sprites_list])
-        engine.gen_map([all_sprites_list, back_layer, entity_list, mouvable_list])
+        engine.gen_map(level, [all_sprites_list, back_layer, entity_list, mouvable_list], [all_sprites_list, back_layer, ghost_list, mouvable_list])
 
         ## Start game loop
         while not done_game :
@@ -204,11 +211,16 @@ class Game :
                 if event.type == pygame.KEYDOWN :
                     ## If escape is pressed, quit game
                     if event.key == pygame.K_ESCAPE :
+                        try :
+                            levels[level] = engine.save_level(entity_list, level)
+                        except :
+                            levels.append(engine.save_level(entity_list, level))
+                            print(levels)
                         done_game = True
 
                     ## If 's' is pressed, save file
                     if event.key == pygame.K_s :
-                        engine.gen_map_file(entity_list)
+                        engine.gen_map_file(levels)
 
                     ## If the left arrow is pressed
                     if event.key == pygame.K_LEFT :
@@ -320,6 +332,8 @@ class Game :
                                         entity.to(pointer.rect.x, [all_sprites_list, back_layer, ghost_list, mouvable_list])
 
                                     entity = entity.ghost
+                                    shift_x = pointer.rect.x - entity.rect.x
+                                    shift_y = pointer.rect.y - entity.rect.y
 
                 if event.type == pygame.MOUSEBUTTONUP :
                     if event.button == 1 :
@@ -419,5 +433,152 @@ class Game :
             ## Set game tick (per second)
             clock.tick(60)
 
+        return(levels)
+
+    def pause(level):
+        ## Init pygame
+        pygame.init()
+        ## Initialise external data configuration
+        conf = Config()
+        ## Create engine
+        engine = Engine()
+        ## Init screen
+        screen = pygame.display.set_mode([conf.width, conf.height], conf.get_screen_mode())
+        ## Init windows title
+        pygame.display.set_caption("JUMPER !!! - Menu")
+        ## Hide mouse cursor
+        pygame.mouse.set_visible(False)
+        ## Init clock
+        clock = pygame.time.Clock()
+        ## Menu loop stat
+        done_pause = False
+        start_game = False
+        done_menu = False
+        ## Set background
+        background = Background()
+        ## Create menu sprite group
+        buton_list = pygame.sprite.Group()
+        all_menu_sprites_list = pygame.sprite.Group()
+        pointer_list = pygame.sprite.Group()
+        ## Create pointer sprite
+        pointer = Pointer()
+        ## Add pointer to pointer's list
+        pointer_list.add(pointer)
+        ## Add pointer to menu sprite's group
+        all_menu_sprites_list.add(pointer)
+        ## Create butons
+        buton1 = Buton("Resume", Color.WHITE)
+        buton2 = Buton("Previous level", Color.WHITE)
+        buton3 = Buton("Next level", Color.WHITE)
+        buton4 = Buton("Back", Color.WHITE)
+        buton5 = Buton("Quit", Color.WHITE)
+        ## Set buton1 pos
+        buton1.rect.x = (conf.width/2 - buton1.width/2)
+        buton1.rect.y = (conf.height/8*2 - buton1.height/2 - 100)
+        ## Set buton2 pos
+        buton2.rect.x = (conf.width/3 - buton2.width/2)
+        buton2.rect.y = (conf.height/8*3 - buton2.height/2 + 100)
+        ## Set buton3 pos
+        buton3.rect.x = (conf.width/3*2 - buton3.width/2)
+        buton3.rect.y = (conf.height/8*3 - buton3.height/2 + 100)
+        ## Set buton4 pos
+        buton4.rect.x = (conf.width/3 - buton4.width/2)
+        buton4.rect.y = (conf.height/8*4 - buton4.height/2 + 100)
+        ## Set buton5 pos
+        buton5.rect.x = (conf.width/3*2 - buton5.width/2)
+        buton5.rect.y = (conf.height/8*4 - buton5.height/2 + 100)
+        ## Add butons to buton list
+        buton_list.add(buton1)
+        buton_list.add(buton2)
+        buton_list.add(buton3)
+        buton_list.add(buton4)
+        buton_list.add(buton5)
+        ## Add butons to menu sprite's group
+        all_menu_sprites_list.add(buton1)
+        all_menu_sprites_list.add(buton2)
+        all_menu_sprites_list.add(buton3)
+        all_menu_sprites_list.add(buton4)
+        all_menu_sprites_list.add(buton5)
+
+        ## Start loop
+        while not done_pause :
+
+            ########## EVENT ZONE ##########
+
+            ## For every events, filter event and refresh screen
+            for event in pygame.event.get() :
+
+                ## Filter events
+                ## If the cross is pressed, quit game
+                if event.type == pygame.QUIT :
+                    done_pause = True
+                
+                ## If any mouse buton is pressed 
+                if event.type == pygame.MOUSEBUTTONDOWN :
+                    ## Detect if left mouse buton is pressed
+                    if event.button == 1 :
+
+                        ## Detect and retourn the pressed buton
+                        butons = engine.get_pressed_buton(buton_list, pointer, [all_menu_sprites_list, buton_list])
+
+                        for buton in butons :
+                            ## If there's no buton pressed, do nothing
+                            if buton == None :
+                                pass
+
+                            ## If play buton is pressed, launch the game
+                            elif buton.text is "Resume" :
+                                start_game = True
+
+                            ## If options buton is pressed, launch options menu
+                            elif buton.text is "Previous level" :
+                                start_game = True
+                                if level != 0 :
+                                    level += -1
+
+                            elif buton.text is "Next level" :
+                                start_game = True
+                                level += 1
+
+                            elif buton.text is "Back" :
+                                done_pause = True
+                                
+                            ## If quit buton is pressed, quit the game
+                            elif buton.text is "Quit" :
+                                done_pause = True
+                                done_menu = True
+
+            ########## LOGIC CODE ZONE ##########
+
+            ## Check for restarting the game
+            if start_game or done_pause or done_menu :
+                return(start_game, done_menu, level)
+
+            ## Update mouse pos
+            pos = pygame.mouse.get_pos()
+            pointer.rect.x = pos[0]
+            pointer.rect.y = pos[1]
+
+            ## Detect bitmap colision between butons and pointer
+            engine.update_selected_buton(buton_list, pointer, [all_menu_sprites_list, buton_list])
+
+            ########## CLEAR SCREEN ZONE ##########
+
+            ## Set the background
+            background.update(screen)
+
+            ########## DRAWING CODE ZONE ##########
+
+            ## Draw all sprites to the screen
+            all_menu_sprites_list.draw(screen)
+            pointer_list.draw(screen)
+
+            ########## REFRESH SCREEN ZONE ##########
+
+            ## Refresh screen
+            pygame.display.flip()
+
+            ## Set game ticks (per second)
+            clock.tick(60)
 
 Game.menu()

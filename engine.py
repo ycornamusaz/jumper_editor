@@ -239,20 +239,20 @@ class Engine() :
 
 ########## CREATE, CONFIGURE BLOCKS AND DEFAULT PLAYER POSITION  ##########
 
-    def gen_map(self, groups) :
+    def gen_map(self, level, groups, ghost_groups) :
 
     ##### BLOCKS #####
         try :
             ## For each block types
-            for ground_type in self.map_data["Levels"][0]["Blocks"] :
+            for ground_type in self.map_data["Levels"][level]["Blocks"] :
                 i = 0
 
                 ## For each blocks
-                for x, y in self.map_data["Levels"][0]["Blocks"][ground_type] :
+                for x, y in self.map_data["Levels"][level]["Blocks"][ground_type] :
 
                     ## Read x and y axes
-                    x = self.map_data["Levels"][0]["Blocks"][ground_type][i]["x"]*self.conf.factor
-                    y = (1000 - self.map_data["Levels"][0]["Blocks"][ground_type][i]["y"])*self.conf.factor
+                    x = self.map_data["Levels"][level]["Blocks"][ground_type][i]["x"]*self.conf.factor
+                    y = (1000 - self.map_data["Levels"][level]["Blocks"][ground_type][i]["y"])*self.conf.factor
 
                     ## Create block
                     ground0 = Ground(ground_type)
@@ -273,8 +273,8 @@ class Engine() :
     ##### PLAYER #####
 
         try :
-            x = self.map_data["Levels"][0]["Player"]["x"]*self.conf.factor
-            y = (1000 - self.map_data["Levels"][0]["Player"]["y"])*self.conf.factor
+            x = self.map_data["Levels"][level]["Player"]["x"]*self.conf.factor
+            y = (1000 - self.map_data["Levels"][level]["Player"]["y"])*self.conf.factor
 
             player = Player()
 
@@ -289,13 +289,13 @@ class Engine() :
 
     ##### ENEMIES #####
         try :
-            for enemie_type in self.map_data["Levels"][0]["Enemies"] :
+            for enemie_type in self.map_data["Levels"][level]["Enemies"] :
                 i = 0
 
-                for x, y, to in self.map_data["Levels"][0]["Enemies"][enemie_type] :
-                    x = self.map_data["Levels"][0]["Enemies"][enemie_type][i]["x"]*self.conf.factor
-                    y = (1000 - self.map_data["Levels"][0]["Enemies"][enemie_type][i]["y"])*self.conf.factor
-                    to = self.map_data["Levels"][0]["Enemies"][enemie_type][i]["to"]*self.conf.factor
+                for x, y, to in self.map_data["Levels"][level]["Enemies"][enemie_type] :
+                    x = self.map_data["Levels"][level]["Enemies"][enemie_type][i]["x"]*self.conf.factor
+                    y = (1000 - self.map_data["Levels"][level]["Enemies"][enemie_type][i]["y"])*self.conf.factor
+                    to = self.map_data["Levels"][level]["Enemies"][enemie_type][i]["to"]*self.conf.factor
 
                     if enemie_type == "flyman" :
                         enemie0 = FlyMan()
@@ -311,15 +311,10 @@ class Engine() :
 
                     enemie0.rect.x = x
                     enemie0.rect.y = y
-                    enemie0.start_from = x
-                    enemie0.end_to = to
-                    enemie0.start_from_base = x
-                    enemie0.end_to_base = to
-                    if enemie_type == "wingman" :
-                        enemie0.start_from = y
-                        enemie0.start_from_base = y
-                        enemie0.end_to = 1000 - to
-                        enemie0.end_to_base = 1000 - to
+                    if enemie_type != "wingman" :
+                        enemie0.to(to, ghost_groups)
+                    else :
+                        enemie0.to((1000 - to), ghost_groups)
 
                     for group in groups :
                         group.add(enemie0)
@@ -328,9 +323,44 @@ class Engine() :
         except :
             pass
 
+########## GET LEVELS IN MAP FILE ##########
+
+    def get_level(self, levels) :
+        for i in range(len(self.map_data["Levels"])) :
+            try :
+                levels[i] = self.map_data["Levels"][i]
+            except :
+                levels.append(self.map_data["Levels"][i])
+        return(levels)
+
 ########## CREATE map.yaml FILE ##########
 
-    def gen_map_file(self, entity_list) :
+    def gen_map_file(self, levels) :
+
+        map_data_txt = "{'Levels': ["
+
+        for i in range(len(levels)) :
+            if i != 0 :
+                map_data_txt += ', '
+            map_data_txt += levels[i]
+        
+        map_data_txt += "]}"
+
+        print(map_data_txt)
+
+        ## Convert map text to dictionary
+        map_data = ast.literal_eval(map_data_txt)
+
+        ## Open map.yaml file in write mode
+        with open('map.yaml', 'w') as outfile:
+            ## Write map_data dictionary as yaml
+            outfile.write(yaml.dump(map_data, default_flow_style=False))
+
+        print('Map File Saved !')
+
+########## CREATE LEVELS FILES ##########
+
+    def save_level(self, entity_list, level) :
 
         ## Vars to check the presence of different parts
         have_blocks = False
@@ -349,7 +379,7 @@ class Engine() :
 
         ## Init vars
         for grd_type in block_list :
-            exec("%s = ''" % grd_type)
+            exec("%s = \"\"" % grd_type)
             exec("%s%s = 0" % (grd_type, "_num"))
 
         for enm_type in enemie_list :
@@ -477,40 +507,39 @@ class Engine() :
 ##### MAP STRING GENERATOR #####
 
         ## Set text start
-        map_data_txt = "{'Levels': [{"
+        level_data_txt = "{"
         
         ## If player is present
         if have_player :
             ## Add player string to map string
-            map_data_txt += player_txt
+            level_data_txt += player_txt
             ## If blocks or enemies are present
             if have_blocks or have_enemies :
                 ## Add coma
-                map_data_txt += ', '
+                level_data_txt += ", "
         
         ## If blocks are present
         if have_blocks :
             ## Add player string to map string
-            map_data_txt += block_txt
+            level_data_txt += block_txt
             ## If blocks or enemies are present
             if have_enemies :
                 ## Add coma
-                map_data_txt += ', '
-        
+                level_data_txt += ", "
+
         ## If enemies are present
         if have_enemies :
             ## Add player string to map string
-            map_data_txt += enemie_txt
-        
+            level_data_txt += enemie_txt
         ## Close dictionary, list, dictionary
-        map_data_txt += "}]}"
+        level_data_txt += "}"
 
         ## Convert map text to dictionary
-        map_data = ast.literal_eval(map_data_txt)
-
+        level_data = ast.literal_eval(level_data_txt)
+        
         ## Open map.yaml file in write mode
-        with open('map.yaml', 'w') as outfile:
+        with open("level_%s.yaml" % level, 'w') as outfile:
             ## Write map_data dictionary as yaml
-            outfile.write(yaml.dump(map_data, default_flow_style=False))
+            outfile.write(yaml.dump(level_data, default_flow_style=False))
 
-        print('Saved !')
+        return(level_data_txt)
